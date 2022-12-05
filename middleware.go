@@ -17,6 +17,7 @@ import (
 var defaultMetricPath = "/metrics"
 
 // Standard default metrics
+//
 //	counter, counter_vec, gauge, gauge_vec,
 //	histogram, histogram_vec, summary, summary_vec
 var reqCnt = &Metric{
@@ -59,16 +60,16 @@ the cardinality of the request counter's "url" label, which might be required in
 For instance, if for a "/customer/:name" route you don't want to generate a time series for every
 possible customer name, you could use this function:
 
-func(c *gin.Context) string {
-	url := c.Request.URL.Path
-	for _, p := range c.Params {
-		if p.Key == "name" {
-			url = strings.Replace(url, p.Value, ":name", 1)
-			break
+	func(c *gin.Context) string {
+		url := c.Request.URL.Path
+		for _, p := range c.Params {
+			if p.Key == "name" {
+				url = strings.Replace(url, p.Value, ":name", 1)
+				break
+			}
 		}
+		return url
 	}
-	return url
-}
 
 which would map "/customer/alice" and "/customer/bob" to their template "/customer/:name".
 */
@@ -96,8 +97,6 @@ type Prometheus struct {
 
 	MetricsList []*Metric
 	MetricsPath string
-
-	ReqCntURLLabelMappingFn RequestCounterURLLabelMappingFn
 
 	// gin.Context string to use as a prometheus URL label
 	URLLabelFromContext string
@@ -139,9 +138,6 @@ func NewPrometheus(subsystem string, customMetricsList ...[]*Metric) *Prometheus
 	p := &Prometheus{
 		MetricsList: metricsList,
 		MetricsPath: defaultMetricPath,
-		ReqCntURLLabelMappingFn: func(c *gin.Context) string {
-			return c.Request.URL.Path // i.e. by default do nothing, i.e. return URL as is
-		},
 	}
 
 	p.registerMetrics(subsystem)
@@ -211,10 +207,17 @@ func (p *Prometheus) runServer() {
 }
 
 func (p *Prometheus) getMetrics() []byte {
-	response, _ := http.Get(p.Ppg.MetricsURL)
+	response, err := http.Get(p.Ppg.MetricsURL)
+	if err != nil {
+		// Swallow the error for now...
+	}
 
 	defer response.Body.Close()
-	body, _ := ioutil.ReadAll(response.Body)
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		// Swallow the error for now...
+	}
 
 	return body
 }
@@ -370,7 +373,9 @@ func (p *Prometheus) HandlerFunc() gin.HandlerFunc {
 		elapsed := float64(time.Since(start)) / float64(time.Second)
 		resSz := float64(c.Writer.Size())
 
-		url := p.ReqCntURLLabelMappingFn(c)
+		// Return the Gin Path of the URL preserving template keys i.e. "/users/:name" instead of "/users/alice"
+		url := c.FullPath()
+
 		// jlambert Oct 2018 - sidecar specific mod
 		if len(p.URLLabelFromContext) > 0 {
 			u, found := c.Get(p.URLLabelFromContext)
