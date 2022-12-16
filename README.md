@@ -31,4 +31,4 @@ func main() {
 }
 ```
 
-See the [example.go file](https://github.com/ericvolp12/go-gin-prometheus/blob/master/example/example.go)
+See the [example.go file](https://github.com/ericvolp12/go-gin-prometheus/blob/main/example/example.go)
