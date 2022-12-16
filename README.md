@@ -1,11 +1,11 @@
 # go-gin-prometheus
-[![](https://godoc.org/github.com/zsais/go-gin-prometheus?status.svg)](https://godoc.org/github.com/zsais/go-gin-prometheus) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![](https://godoc.org/github.com/ericvolp12/go-gin-prometheus?status.svg)](https://godoc.org/github.com/ericvolp12/go-gin-prometheus) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Gin Web Framework Prometheus metrics exporter
 
 ## Installation
 
-`$ go get github.com/zsais/go-gin-prometheus`
+`$ go get github.com/ericvolp12/go-gin-prometheus`
 
 ## Usage
 
@@ -14,7 +14,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/zsais/go-gin-prometheus"
+	"github.com/ericvolp12/go-gin-prometheus"
 )
 
 func main() {
@@ -31,4 +31,4 @@ func main() {
 }
 ```
 
-See the [example.go file](https://github.com/zsais/go-gin-prometheus/blob/master/example/example.go)
+See the [example.go file](https://github.com/ericvolp12/go-gin-prometheus/blob/master/example/example.go)
