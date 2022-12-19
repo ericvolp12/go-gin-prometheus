@@ -54,27 +54,6 @@ var standardMetrics = []*Metric{
 	reqSz,
 }
 
-/*
-RequestCounterURLLabelMappingFn is a function which can be supplied to the middleware to control
-the cardinality of the request counter's "url" label, which might be required in some contexts.
-For instance, if for a "/customer/:name" route you don't want to generate a time series for every
-possible customer name, you could use this function:
-
-	func(c *gin.Context) string {
-		url := c.Request.URL.Path
-		for _, p := range c.Params {
-			if p.Key == "name" {
-				url = strings.Replace(url, p.Value, ":name", 1)
-				break
-			}
-		}
-		return url
-	}
-
-which would map "/customer/alice" and "/customer/bob" to their template "/customer/:name".
-*/
-type RequestCounterURLLabelMappingFn func(c *gin.Context) string
-
 // Metric is a definition for the name, description, type, ID, and
 // prometheus.Collector type (i.e. CounterVec, Summary, etc) of each metric
 type Metric struct {
@@ -84,6 +63,7 @@ type Metric struct {
 	Description     string
 	Type            string
 	Args            []string
+	Buckets         *[]float64
 }
 
 // Prometheus contains the metrics gathered by the instance and its path
@@ -100,6 +80,11 @@ type Prometheus struct {
 
 	// gin.Context string to use as a prometheus URL label
 	URLLabelFromContext string
+}
+
+// DefaultMetricOverrides allows you to override properties of default metrics
+type DefaultMetricOverrides struct {
+	RequestDurationSecondsBuckets *[]float64
 }
 
 // PrometheusPushGateway contains the configuration for pushing to a Prometheus pushgateway (optional)
@@ -121,7 +106,11 @@ type PrometheusPushGateway struct {
 }
 
 // NewPrometheus generates a new set of metrics with a certain subsystem name
-func NewPrometheus(subsystem string, customMetricsList ...[]*Metric) *Prometheus {
+func NewPrometheus(
+	subsystem string,
+	overrides *DefaultMetricOverrides,
+	customMetricsList ...[]*Metric,
+) *Prometheus {
 
 	var metricsList []*Metric
 
@@ -132,6 +121,10 @@ func NewPrometheus(subsystem string, customMetricsList ...[]*Metric) *Prometheus
 	}
 
 	for _, metric := range standardMetrics {
+		// Override the histogram buckets for Request Duration if configured
+		if metric.ID == "reqDur" && overrides != nil {
+			metric.Buckets = overrides.RequestDurationSecondsBuckets
+		}
 		metricsList = append(metricsList, metric)
 	}
 
@@ -286,20 +279,32 @@ func NewMetric(m *Metric, subsystem string) prometheus.Collector {
 			},
 		)
 	case "histogram_vec":
+		// Initialize DefBuckets and allow optional override
+		buckets := prometheus.DefBuckets
+		if m.Buckets != nil {
+			buckets = *m.Buckets
+		}
 		metric = prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Subsystem: subsystem,
 				Name:      m.Name,
 				Help:      m.Description,
+				Buckets:   buckets,
 			},
 			m.Args,
 		)
 	case "histogram":
+		// Initialize DefBuckets and allow optional override
+		buckets := prometheus.DefBuckets
+		if m.Buckets != nil {
+			buckets = *m.Buckets
+		}
 		metric = prometheus.NewHistogram(
 			prometheus.HistogramOpts{
 				Subsystem: subsystem,
 				Name:      m.Name,
 				Help:      m.Description,
+				Buckets:   buckets,
 			},
 		)
 	case "summary_vec":

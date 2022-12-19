@@ -1,7 +1,10 @@
 package main
 
 import (
-	"github.com/mcuadros/go-gin-prometheus"
+	"math/rand"
+	"time"
+
+	ginprometheus "github.com/ericvolp12/go-gin-prometheus"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,10 +33,20 @@ func main() {
 		p := ginprometheus.NewPrometheus("gin", customMetrics)
 	*/
 
-	p := ginprometheus.NewPrometheus("gin")
+	p := ginprometheus.NewPrometheus("gin", &ginprometheus.DefaultMetricOverrides{
+		// Create custom buckets that extends the low-range down to 100 microseconds
+		RequestDurationSecondsBuckets: &[]float64{
+			0.0001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10,
+		},
+	})
+
+	rand.Seed(time.Now().UnixMilli())
 
 	p.Use(r)
 	r.GET("/", func(c *gin.Context) {
+		// Generate a random latency from 0-5000 milliseconds
+		pauseForMS := rand.Float64() * 5000
+		time.Sleep(time.Millisecond * time.Duration(pauseForMS))
 		c.JSON(200, "Hello world!")
 	})
 
