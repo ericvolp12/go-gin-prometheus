@@ -54,32 +54,36 @@ Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-
 [GIN-debug] Listening and serving HTTP on :29090
 
 
-$ # In another window
-$ k6 run --vus 50 --duration 30s k6_test.js
+$ # In another window (note the 10,000 VUs here is a LOT so you can knock that down to like 500)
+$ k6 run --vus 10000 --duration 30s k6_test.js
 
-  scenarios: (100.00%) 1 scenario, 50 max VUs, 1m0s max duration (incl. graceful stop):
-           * default: 50 looping VUs for 30s (gracefulStop: 30s)
+  execution: local
+     script: k6_test.js
+     output: -
+
+  scenarios: (100.00%) 1 scenario, 10000 max VUs, 1m0s max duration (incl. graceful stop):
+           * default: 10000 looping VUs for 30s (gracefulStop: 30s)
 
 
-running (0m33.9s), 00/50 VUs, 627 complete and 0 interrupted iterations
-default ✓ [======================================] 50 VUs  30s
+running (0m35.0s), 00000/10000 VUs, 126366 complete and 0 interrupted iterations
+default ✓ [======================================] 10000 VUs  30s
 
-     data_received..................: 86 kB 2.5 kB/s
-     data_sent......................: 51 kB 1.5 kB/s
-     http_req_blocked...............: avg=25.71µs min=720ns   med=1.71µs  max=542.65µs p(90)=3.65µs  p(95)=247.82µs
-     http_req_connecting............: avg=13.19µs min=0s      med=0s      max=432.97µs p(90)=0s      p(95)=137.28µs
-     http_req_duration..............: avg=2.51s   min=16.93ms med=2.48s   max=4.98s    p(90)=4.57s   p(95)=4.72s
-       { expected_response:true }...: avg=2.51s   min=16.93ms med=2.48s   max=4.98s    p(90)=4.57s   p(95)=4.72s
-     http_req_failed................: 0.00% ✓ 0         ✗ 627
-     http_req_receiving.............: avg=32.98µs min=15.37µs med=32.63µs max=69.37µs  p(90)=46.5µs  p(95)=50.42µs
-     http_req_sending...............: avg=9.87µs  min=4µs     med=8.25µs  max=60.17µs  p(90)=13.47µs p(95)=25.48µs
-     http_req_tls_handshaking.......: avg=0s      min=0s      med=0s      max=0s       p(90)=0s      p(95)=0s
-     http_req_waiting...............: avg=2.51s   min=16.84ms med=2.48s   max=4.98s    p(90)=4.57s   p(95)=4.72s
-     http_reqs......................: 627   18.503394/s
-     iteration_duration.............: avg=2.51s   min=17.52ms med=2.48s   max=4.98s    p(90)=4.57s   p(95)=4.72s
-     iterations.....................: 627   18.503394/s
-     vus............................: 6     min=6       max=50
-     vus_max........................: 50    min=50      max=50
+     data_received..................: 17 MB  495 kB/s
+     data_sent......................: 10 MB  293 kB/s
+     http_req_blocked...............: avg=7.27ms  min=520ns   med=940ns   max=187.2ms  p(90)=3.06µs p(95)=86.21ms
+     http_req_connecting............: avg=6.7ms   min=0s      med=0s      max=187.17ms p(90)=0s     p(95)=81.35ms
+     http_req_duration..............: avg=2.49s   min=53.24µs med=2.48s   max=5.06s    p(90)=4.49s  p(95)=4.74s
+       { expected_response:true }...: avg=2.49s   min=53.24µs med=2.48s   max=5.06s    p(90)=4.49s  p(95)=4.74s
+     http_req_failed................: 0.00%  ✓ 0          ✗ 126366
+     http_req_receiving.............: avg=17.66µs min=5.94µs  med=16.35µs max=60.61ms  p(90)=21.7µs p(95)=23.65µs
+     http_req_sending...............: avg=1.37ms  min=2.7µs   med=4.98µs  max=80.33ms  p(90)=9.22µs p(95)=5.34ms
+     http_req_tls_handshaking.......: avg=0s      min=0s      med=0s      max=0s       p(90)=0s     p(95)=0s
+     http_req_waiting...............: avg=2.49s   min=39.39µs med=2.48s   max=5.01s    p(90)=4.49s  p(95)=4.74s
+     http_reqs......................: 126366 3611.73162/s
+     iteration_duration.............: avg=2.49s   min=73.9µs  med=2.49s   max=5.13s    p(90)=4.5s   p(95)=4.75s
+     iterations.....................: 126366 3611.73162/s
+     vus............................: 34     min=34       max=10000
+     vus_max........................: 10000  min=10000    max=10000
 ```
 
 An example output from the `/metrics` endpoint after executing a test looks like:
@@ -87,30 +91,30 @@ An example output from the `/metrics` endpoint after executing a test looks like
 ```
 # HELP gin_request_duration_seconds The HTTP request latencies in seconds.
 # TYPE gin_request_duration_seconds histogram
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.0001"} 0
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.005"} 0
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.01"} 0
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.025"} 2
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.05"} 6
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.1"} 9
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.25"} 24
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.5"} 60
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="1"} 116
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="2.5"} 318
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="5"} 627
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="10"} 627
-gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="+Inf"} 627
-gin_request_duration_seconds_sum{code="200",method="GET",url="/"} 1573.7542368
-gin_request_duration_seconds_count{code="200",method="GET",url="/"} 627
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.0001"} 25
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.005"} 134
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.01"} 249
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.025"} 653
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.05"} 1280
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.1"} 2556
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.25"} 6413
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="0.5"} 12748
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="1"} 25314
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="2.5"} 63511
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="5"} 126365
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="10"} 126366
+gin_request_duration_seconds_bucket{code="200",method="GET",url="/",le="+Inf"} 126366
+gin_request_duration_seconds_sum{code="200",method="GET",url="/"} 314792.871235347
+gin_request_duration_seconds_count{code="200",method="GET",url="/"} 126366
 # HELP gin_request_size_bytes The HTTP request sizes in bytes.
 # TYPE gin_request_size_bytes summary
-gin_request_size_bytes_sum 39501
-gin_request_size_bytes_count 627
+gin_request_size_bytes_sum 7.961058e+06
+gin_request_size_bytes_count 126366
 # HELP gin_requests_total How many HTTP requests processed, partitioned by status code and HTTP method.
 # TYPE gin_requests_total counter
-gin_requests_total{code="200",handler="main.main.func1",host="localhost:29090",method="GET",url="/"} 627
+gin_requests_total{code="200",handler="main.main.func1",host="localhost:29090",method="GET",url="/"} 126366
 # HELP gin_response_size_bytes The HTTP response sizes in bytes.
 # TYPE gin_response_size_bytes summary
-gin_response_size_bytes_sum 8778
-gin_response_size_bytes_count 627
+gin_response_size_bytes_sum 1.769124e+06
+gin_response_size_bytes_count 126366
 ```
